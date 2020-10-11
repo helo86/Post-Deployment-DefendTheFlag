@@ -1,7 +1,20 @@
 Import-Module ActiveDirectory
 
 ### Vulnerabilities
-##### Sensitive Data in LDAP
+
+### Overview
+# 1. Sensitive Data in LDAP
+# 2. Password Spraying
+# 3. Kerberoasting
+# 4. ASREP Roasting
+# 5. PASSWD NOT REQ
+# 6. GPPPassword
+# 7. Unconstrained Delegation
+# 8. Constrained Delegation
+
+###########################################################################
+### 1. Sensitive Data in LDAP - Infos in Description field
+###########################################################################
 Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Adding Users with sensitive data in Attributes..."
 if (!([ADSI]::Exists("LDAP://CN=PrinterAdmin,OU=ServiceAccounts,OU=AdministrativeAccounts,DC=contoso,DC=azure")))
 {
@@ -14,9 +27,23 @@ else
 	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user $SAM already exists. Moving On."
 }
  
-
-
-### Kerberoastable Users
+###########################################################################
+### 2. Password Spraying - User has start password set
+###########################################################################
+Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Adding Users with start password of the domain"
+if (!([ADSI]::Exists("LDAP://CN=NewAdmin,OU=ServiceAccounts,OU=AdministrativeAccounts,DC=contoso,DC=azure")))
+{
+	
+	New-ADUser -Name "NewAdmin" -DisplayName "NewAdmin" -SamAccountName "newadm" -UserPrincipalName "newadm" -GivenName "Horst" -Surname "Administrator" -AccountPassword ((ConvertTo-SecureString "Start123!" -AsPlainText -Force)) -Enabled $true -Path "OU=ServiceAccounts, OU=AdministrativeAccounts, DC=CONTOSO, DC=AZURE" -ChangePasswordAtLogon $false -PasswordNeverExpires $true
+	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Created user newadm with start password of the domain" 
+}
+else
+{
+	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user $SAM already exists. Moving On."
+}
+###########################################################################
+### 3. Kerberoasting - Kerberoastable Users
+###########################################################################
 Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Adding Kerberoastable Users..."
 if (!([ADSI]::Exists("LDAP://CN=DBAdmin,OU=ServiceAccounts,OU=AdministrativeAccounts,DC=contoso,DC=azure")))
 {
@@ -81,7 +108,9 @@ else
   Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user MercureAdmin already exists. Moving On."
 }
 
-#### ASREP Roastable Users
+###########################################################################
+#### 4. ASREP Roasting - ASREP Roastable Users
+###########################################################################
 Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Adding ASREP Roastable Users..."
 
 if (!([ADSI]::Exists("LDAP://CN=MercureAdmin,OU=ServiceAccounts,OU=AdministrativeAccounts,DC=contoso,DC=azure")))
@@ -96,8 +125,9 @@ else
   Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user TankAdmin already exists. Moving On."
 }
 
-
-### PASSWD NOT REQ User
+###########################################################################
+### 5. PASSWD NOT REQ User - Login without password
+###########################################################################
 Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Adding PASSWD_NOT_REQD User..."
 if (!([ADSI]::Exists("LDAP://CN=MailerAdmin,OU=ServiceAccounts,OU=AdministrativeAccounts,DC=contoso,DC=azure")))
 {
@@ -109,6 +139,16 @@ else
   Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user MailerAdmin already exists. Moving On."
 }
 
+###########################################################################
+### 6. GPPPassword
+###########################################################################
+# Infos: howto:Setting local user passwords via Group Policy
+# https://attack.stealthbits.com/plaintext-passwords-sysvol-group-policy-preferences
 
+###########################################################################
+### 7. Unconstrained Delegation
+###########################################################################
 
-
+###########################################################################
+### 8. Constrained Delegation
+###########################################################################
