@@ -11,9 +11,16 @@ Import-Module ActiveDirectory
 # 6. GPPPassword
 # 7. Unconstrained Delegation
 # 8. Constrained Delegation
+# 9. Silver Tickets
+#10. ACLs/ACEs
+#11. GPO Abuse
+#12. Golden Ticket, DCSync, Skeleton, ...
+#13. Forest Trust Abuse
+#14. Bastion
+
 
 ###########################################################################
-### 1. Sensitive Data in LDAP - Infos in Description field
+### 1. Sensitive Data in LDAP - Infos in description field
 ###########################################################################
 Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Adding Users with sensitive data in Attributes..."
 if (!([ADSI]::Exists("LDAP://CN=PrinterAdmin,OU=ServiceAccounts,OU=AdministrativeAccounts,DC=contoso,DC=azure")))
