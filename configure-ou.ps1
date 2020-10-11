@@ -1,16 +1,16 @@
 Import-Module ActiveDirectory
 # Purpose: Sets up the Server and Workstations OUs
 
-Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Checking AD services status..."
+Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Checking AD services status"
 $svcs = "adws","dns","kdc","netlogon"
 Get-Service -name $svcs -ComputerName localhost | Select Machinename,Name,Status
 
-Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Creating Server and Workstation OUs..."
-Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Creating Servers OU..."
+Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Creating Server and Workstation OUs"
 
+Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Creating Servers OU"
 if (!([ADSI]::Exists("LDAP://OU=Servers,DC=contoso,DC=azure")))
 {
-  New-ADOrganizationalUnit -Name "Servers" -Server "contosodc.contoso.azure"
+  New-ADOrganizationalUnit -Name "Servers"
 }
 else
 {
@@ -27,7 +27,7 @@ else
   Write-Host "'[{0:HH:mm}]' -f (Get-Date)) Workstations OU already exists. Moving On."
 }
 
-Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Creating Workstations OU"
+Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Creating UserAccounts OU"
 if (!([ADSI]::Exists("LDAP://OU=UserAccounts,DC=contoso,DC=azure")))
 {
   New-ADOrganizationalUnit -Name "UserAccounts"
