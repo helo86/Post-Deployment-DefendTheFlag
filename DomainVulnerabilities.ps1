@@ -155,7 +155,43 @@ else
 ###########################################################################
 ### 7. Unconstrained Delegation
 ###########################################################################
+# Infos: Setup a VM with (un)constrained delegation, show benefits like e.g. lateral movement, show problems by using token, 
+# Need: action where admin user logs into the system
+# https://4sysops.com/archives/how-to-configure-computer-delegation-with-powershell/
 
 ###########################################################################
 ### 8. Constrained Delegation
 ###########################################################################
+# Infos: Setup a VM with (un)constrained delegation, 
+# Need: action where admin user logs into the system, change service type due to unprotected field
+# https://4sysops.com/archives/how-to-configure-computer-delegation-with-powershell/
+
+###########################################################################
+### 9. Silver Tickets
+###########################################################################
+# Infos: login to host and fetch vm hash and use all silver tickets possibilities
+
+###########################################################################
+### 10. ACLs/ACEs
+###########################################################################
+# Infos: misuse rights
+
+###########################################################################
+### 11. GPO Abuse
+###########################################################################
+# Infos: tbd
+
+###########################################################################
+### 12. Golden Ticket, DCSync, Skeleton, ...
+###########################################################################
+# Get DC hash and show attacks
+
+###########################################################################
+### 13. Forest Trust Abuse
+###########################################################################
+# Infos: tbd
+
+###########################################################################
+### 14. Bastion
+###########################################################################
+# Infos: tbd
