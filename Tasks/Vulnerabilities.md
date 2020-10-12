@@ -120,5 +120,29 @@ Get-ADUser -Filter {PasswordNotRequired -eq $true}
 
 ToDO
 
+# 6. GPPPassword
 
+
+# 7. Unconstrained Delegation
+
+
+# 8. Constrained Delegation
+
+
+# 9. Silver Tickets
+
+
+# 10. ACLs/ACEs
+
+
+# 11. GPO Abuse
+
+
+# 12. Golden Ticket, DCSync, Skeleton, ...
+
+
+# 13. Forest Trust Abuse
+
+
+# 14. Bastion
 
