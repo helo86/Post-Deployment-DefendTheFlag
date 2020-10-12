@@ -11,3 +11,6 @@ ADexplorer> search user description field contains pw, pwd, password, pass
 PS> .\ADRecon.ps1
 
 PS> .\ADRecon.ps1 -GenExcel .\ADRecon-Report-<timestamp>
+
+TODO: wget Excel file since Excel will not be installed
+
