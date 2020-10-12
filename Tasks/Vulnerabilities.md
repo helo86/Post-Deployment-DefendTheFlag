@@ -1,14 +1,13 @@
 # 1. Sensitive Data in LDAP
 
 ## Start ADExplorer and search through the AD for sensitive information
-PS> adexplorer.exe
+`PS> adexplorer.exe`
 
 ADexplorer> search user description field contains pw, pwd, password, pass
 
 ## Enumerate the AD with ADRecon
-PS> .\ADRecon.ps1
-
-PS> .\ADRecon.ps1 -GenExcel .\ADRecon-Report-timestamp
+`PS> .\ADRecon.ps1
+PS> .\ADRecon.ps1 -GenExcel .\ADRecon-Report-timestamp`
 
 TODO: wget Excel file since Excel will not be installed
 
