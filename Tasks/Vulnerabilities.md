@@ -1,6 +1,6 @@
 # 1. Sensitive Data in LDAP
 ## Start ADExplorer and search through the AD for sensitive information
-PS> `adexplorer.exe`
+`PS> adexplorer.exe`
 
 ADexplorer> search user description field contains pw, pwd, password, pass
 
@@ -114,3 +114,11 @@ ToDo error
 
 ## Cracking AS-REP hash with Hashcat
 `PS> hashcat -a 0 -m 18200 asrephashes.txt /usr/share/wordlists/rockyou.txt`
+
+# 5. PASSWD NOT REQ
+Get-ADUser -Filter {PasswordNotRequired -eq $true}
+
+ToDO
+
+
+
