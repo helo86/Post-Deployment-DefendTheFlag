@@ -4,14 +4,15 @@
 ADexplorer> search user description field contains pw, pwd, password, pass
 
 ## Enumerate the AD with ADRecon
-`PS> .\ADRecon.ps1
+`PS> .\ADRecon.ps1`
 
-PS> .\ADRecon.ps1 -GenExcel .\ADRecon-Report-timestamp`
+`PS> .\ADRecon.ps1 -GenExcel .\ADRecon-Report-timestamp`
 
 TODO: wget Excel file since Excel will not be installed
 
 ## Check if the password is working
-```function Test-ADCredential {
+```
+function Test-ADCredential {
 
     [CmdletBinding()]
     Param
@@ -26,7 +27,8 @@ TODO: wget Excel file since Excel will not be installed
         $DS = New-Object System.DirectoryServices.AccountManagement.PrincipalContext('domain')
         $DS.ValidateCredentials($UserName, $Password)
     }
-}```
+}
+```
 
 `Test-ADCredential -UserName printeradm -Password "x!3945jjlkJ2mN4QQ2"`
 
@@ -49,11 +51,11 @@ ToDo error
 # 3. Kerberoasting
 ## Identify Kerberoastable users
 ### PowerView
-PS> Import-Module .\PowerView.ps1
+`PS> Import-Module .\PowerView.ps1`
 
-PS> Get-NetUser | Where-Object {$_.servicePrincipalName} | fl
+`PS> Get-NetUser | Where-Object {$_.servicePrincipalName} | fl`
 
-PS> Get-NetUser -SPN | ft serviceprincipalname, samaccountname, cn, pwdlastset 
+`PS> Get-NetUser -SPN | ft serviceprincipalname, samaccountname, cn, pwdlastset`
 
 ### PowerView-Dev
 PS> Import-Module .\PowerView-dev.ps1
