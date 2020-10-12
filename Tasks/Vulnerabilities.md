@@ -1,6 +1,6 @@
 # 1. Sensitive Data in LDAP
 ## Start ADExplorer and search through the AD for sensitive information
-`PS> adexplorer.exe`
+PS> `adexplorer.exe`
 
 ADexplorer> search user description field contains pw, pwd, password, pass
 
