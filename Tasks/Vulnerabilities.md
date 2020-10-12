@@ -1,18 +1,18 @@
 # 1. Sensitive Data in LDAP
-
 ## Start ADExplorer and search through the AD for sensitive information
 `PS> adexplorer.exe`
-
 ADexplorer> search user description field contains pw, pwd, password, pass
 
 ## Enumerate the AD with ADRecon
 `PS> .\ADRecon.ps1
+
 PS> .\ADRecon.ps1 -GenExcel .\ADRecon-Report-timestamp`
 
 TODO: wget Excel file since Excel will not be installed
 
 ## Check if the password is working
-`function Test-ADCredential {
+```function Test-ADCredential {
+
     [CmdletBinding()]
     Param
     (
@@ -26,7 +26,7 @@ TODO: wget Excel file since Excel will not be installed
         $DS = New-Object System.DirectoryServices.AccountManagement.PrincipalContext('domain')
         $DS.ValidateCredentials($UserName, $Password)
     }
-}`
+}```
 
 `Test-ADCredential -UserName printeradm -Password "x!3945jjlkJ2mN4QQ2"`
 
