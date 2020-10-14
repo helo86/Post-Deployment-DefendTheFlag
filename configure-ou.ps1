@@ -126,3 +126,11 @@ else
 {
   Write-Host "'[{0:HH:mm}]' -f (Get-Date)) ServiceAccounts OU already exists. Moving On."
 }
+
+if (!([ADSI]::Exists("LDAP://OU=LocalAdminAccounts,OU=AdministrativeAccounts,DC=contoso,DC=azure")))
+{
+	New-ADOrganizationalUnit -Name "LocalAdminAccounts"  -Path "OU=AdministrativeAccounts,DC=contoso, DC=azure"
+}else
+{
+  Write-Host "'[{0:HH:mm}]' -f (Get-Date)) LocalAdminAccounts OU already exists. Moving On."
+}
