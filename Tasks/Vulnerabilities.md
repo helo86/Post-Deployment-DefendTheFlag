@@ -4,6 +4,11 @@
 
 ADexplorer> search user description field contains pw, pwd, password, pass
 
+## Use command line
+There are 3-4 fields that seem to be common in most AD schemas: UserPassword, UnixUserPassword, unicodePwd and msSFU30Password
+
+`Get-WmiObject -Class Win32_UserAccount -Filter "Domain='COMPANYDOMAIN' AND Disabled='False'" | Select Name, Domain, Status, LocalAccount, AccountType, Lockout, PasswordRequired,PasswordChangeable, Description, SID`
+
 ## Enumerate the AD with ADRecon
 `.\ADRecon.ps1`
 
